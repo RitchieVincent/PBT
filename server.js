@@ -15,23 +15,39 @@ app.use(express.static(__dirname + '/files'));
 app.set('view engine', 'ejs');
 app.engine('html', require('ejs').renderFile);
 
-var readImages = new Promise(function(resolve, reject) {
+var readImages = function(route) {
+    
+    route = route.substring(1);
         
     fs.readdir(imgDir, function(err, files) {
 
         if(err) throw err;
 
-        resolve(files);
+        for(i = 0; i < files.length; i++) {
+
+            if(files[i] == route) {
+
+                imagesDir = imgDir + '\\' + route;
+
+            }
+
+        };
+        
+        fs.readdir(imagesDir, function(err, files) {
+            
+            if(err) throw err;
+        
+            images = files;
+            
+        });
 
     });
+    
+};
 
-});
-
-var readCopy = function(route) {
+var readFiles = function(route) {
     
     route = route.substring(1);
-    
-    console.log(route);
     
     return new Promise(function(resolve, reject) {
         
@@ -39,16 +55,11 @@ var readCopy = function(route) {
 
             if(err) throw err;
 
-            console.log(copy); 
-
             for(i = 0; i < copy.length; i++) {
 
                 if(copy[i].toString().substring(0, copy[i].toString().indexOf('-')) == route) {
 
-                    console.log(copy[i]);
-
-                    var copyFile = copyDir + '\\' + copy[i];
-                    console.log(copyFile); 
+                    var copyFile = copyDir + '\\' + copy[i]; 
 
                 }
 
@@ -66,32 +77,42 @@ var readCopy = function(route) {
         
     });
     
-}
+};
 
-app.get('/', function(req, res) {
+app.get('/', function(req, res) { 
     
-    console.log(req.originalUrl);
+    readImages('/index');
     
-    Promise.all([readImages, readCopy]).then(function(values) {
-        
-        res.render('index.html', {imgDir: imgDir, image: values[0], copy: values[1]});
-        
-    }, function(reason) {
-        
-        console.log(reason);
-        
+    readFiles('/index').then(function(values) {
+
+        res.render('index.html', {imgDir: imagesDir, image: images, copy: values}); 
+
     });
     
 });
 
 app.get('/about', function(req, res) {
     
-    readCopy(req.originalUrl).then(function(values) {
+    readImages(req.originalUrl);
+
+    readFiles(req.originalUrl).then(function(values) {
         
-        res.render('about.html', {imgDir: imgDir, image: values, copy: values}); 
+        res.render('about.html', {imgDir: imagesDir, image: images, copy: values}); 
         
     });
     
+});
+
+app.get('/test', function(req, res) {
+    
+    readImages(req.originalUrl);
+
+    readFiles(req.originalUrl).then(function(values) {
+
+        res.render('test.html', {imgDir: imagesDir, image: images, copy: values}); 
+
+    });
+
 });
 
 app.use(function(req, res, next) {
@@ -109,6 +130,6 @@ app.use(function(err, req, res, next) {
 
 app.listen(port, function() {
     
-//    console.log('Server listening on port ' + port);
+    console.log('Server listening on port ' + port);
     
 })
