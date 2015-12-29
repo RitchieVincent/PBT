@@ -85,34 +85,24 @@ app.get('/', function(req, res) {
     
     readFiles('/index').then(function(values) {
 
-        res.render('index.html', {imgDir: imagesDir, image: images, copy: values}); 
+        res.render('template.html', {imgDir: '/index', image: images, copy: values}); 
 
     });
     
 });
 
-app.get('/about', function(req, res) {
+app.get('/:route', function(req, res) {
     
-    readImages(req.originalUrl);
+    var route = '/' + req.params.route;
+    
+    readImages(route);
 
-    readFiles(req.originalUrl).then(function(values) {
+    readFiles(route).then(function(values) {
         
-        res.render('about.html', {imgDir: imagesDir, image: images, copy: values}); 
+        res.render('template.html', {imgDir: route, image: images, copy: values}); 
         
     });
     
-});
-
-app.get('/test', function(req, res) {
-    
-    readImages(req.originalUrl);
-
-    readFiles(req.originalUrl).then(function(values) {
-
-        res.render('test.html', {imgDir: imagesDir, image: images, copy: values}); 
-
-    });
-
 });
 
 app.use(function(req, res, next) {
